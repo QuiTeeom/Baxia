@@ -1,6 +1,8 @@
 package com.quitee.baxia.core;
 
 import com.quitee.baxia.exceptions.NoSuchSpace;
+import com.quitee.baxia.exceptions.NotASpaceClass;
+import com.quitee.baxia.exceptions.NotExtendsFromRefClass;
 import com.quitee.baxia.scan.BxScaner;
 
 import java.util.HashMap;
@@ -10,39 +12,36 @@ import java.util.Map;
 public class Baxia {
     public static void scan(String scanPattern) {
         new BxScaner(aClass -> {
-            if (aClass.getAnnotation(com.quitee.baxia.annotations.Space.class) != null)
-                createSpace(aClass);
+            if (aClass.getAnnotation(com.quitee.baxia.annotations.Space.class) != null){
+                createSpace(aClass, (com.quitee.baxia.annotations.Space) aClass.getAnnotation(com.quitee.baxia.annotations.Space.class));
+            }
+
         }).scan(scanPattern);
     }
 
     private static Map<Class, Space> spaceMap = new HashMap<>();
 
-    private static synchronized Space createSpace(Class aClass) {
+    private static synchronized Space createSpace(Class aClass,com.quitee.baxia.annotations.Space spaceA) {
         if (!spaceMap.containsKey(aClass)) {
-            Space space = new SpaceImp(aClass);
-            spaceMap.put(aClass, space);
+            Class refClass = spaceA.ref();
+            if(refClass.equals(com.quitee.baxia.annotations.Space.NullClass.class)){
+                Space space = new SpaceImp(aClass);
+                spaceMap.put(aClass, space);
+            }else {
+                if (refClass.isAssignableFrom(aClass)){
+                    if (refClass.getAnnotation(com.quitee.baxia.annotations.Space.class) != null){
+                        createSpace(refClass, (com.quitee.baxia.annotations.Space) refClass.getAnnotation(com.quitee.baxia.annotations.Space.class));
+                        spaceMap.put(aClass,getSpace(refClass));
+                    }else {
+                        throw new NotASpaceClass(refClass);
+                    }
+                }else {
+                    throw new NotExtendsFromRefClass(aClass,refClass);
+                }
+            }
         }
         return (spaceMap.get(aClass));
     }
-
-    //
-//    public static synchronized <T> T get(Class<T> tClass, String where, Object value,Object... parameters){
-//        Space<T> space = getSpace(tClass.getName());
-//        return  space.get(value,where,parameters);
-//    }
-//
-//    public static synchronized <T> List<T> getList(Class<T> tClass) {
-//        List<T> res;
-//        ClassInfo classInfo = getClassInfo(tClass);
-//        Space<T> space = classInfo.getSpace();
-//        res = space.getList();
-//        return res;
-//    }
-//
-
-//    public static synchronized <T> T get(Class<T> tClass, String where, Integer value) {
-//        return null;
-//    }
 
     public static synchronized <T> T get(Class<T> tClass, String where, Object value, Object... parameters) {
         Space<T> space = getSpace(tClass);

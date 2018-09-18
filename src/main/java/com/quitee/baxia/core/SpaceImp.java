@@ -19,45 +19,50 @@ public class SpaceImp<T> implements Space<T>{
 
     public SpaceImp(Class tClass) {
         this.tClass = tClass;
-        Field fields[] = tClass.getDeclaredFields();
-        for(Field field:fields){
-           com.quitee.baxia.annotations.Field anno = field.getAnnotation(com.quitee.baxia.annotations.Field.class);
-           if(anno!=null){
-               String fieldName = field.getName();
-               String value = anno.value();
-               if(value!=null&&value.trim().length()>0){
-                   fieldName = value;
-               }
-               if(valueGetterMap.containsKey(fieldName))
-                   throw new DuplicateField(tClass,fieldName);
-               else {
-                   field.setAccessible(true);
-                   valueGetterMap.put(fieldName, new FieldValueGetter(field));
-               }
-           }
-        }
-
-        Method[] methods = tClass.getDeclaredMethods();
-        for(Method method:methods){
-            MethodField methodField = method.getAnnotation(MethodField.class);
-            if(methodField!=null){
-                if(method.getReturnType().getName().equalsIgnoreCase("void")){
-                    throw new IllegalMethod(tClass,method.getName());
-                }
-
-                String fieldName = method.getName();
-                String value = methodField.value();
-                if(value!=null&&value.length()>0){
-                    fieldName = value;
-                }
-                if(valueGetterMap.containsKey(fieldName))
-                    throw new DuplicateField(tClass,fieldName);
-                else {
-                    method.setAccessible(true);
-                    valueGetterMap.put(fieldName, new MethodValueGetter(method));
+        Class clazz = tClass;
+        while (clazz!=null){
+            Field fields[] = clazz.getDeclaredFields();
+            for(Field field:fields){
+                com.quitee.baxia.annotations.Field anno = field.getAnnotation(com.quitee.baxia.annotations.Field.class);
+                if(anno!=null){
+                    String fieldName = field.getName();
+                    String value = anno.value();
+                    if(value!=null&&value.trim().length()>0){
+                        fieldName = value;
+                    }
+                    if(valueGetterMap.containsKey(fieldName))
+                        throw new DuplicateField(clazz,fieldName);
+                    else {
+                        field.setAccessible(true);
+                        valueGetterMap.put(fieldName, new FieldValueGetter(field));
+                    }
                 }
             }
+
+            Method[] methods = clazz.getDeclaredMethods();
+            for(Method method:methods){
+                MethodField methodField = method.getAnnotation(MethodField.class);
+                if(methodField!=null){
+                    if(method.getReturnType().getName().equalsIgnoreCase("void")){
+                        throw new IllegalMethod(clazz,method.getName());
+                    }
+
+                    String fieldName = method.getName();
+                    String value = methodField.value();
+                    if(value!=null&&value.length()>0){
+                        fieldName = value;
+                    }
+                    if(valueGetterMap.containsKey(fieldName))
+                        throw new DuplicateField(clazz,fieldName);
+                    else {
+                        method.setAccessible(true);
+                        valueGetterMap.put(fieldName, new MethodValueGetter(method));
+                    }
+                }
+            }
+            clazz = clazz.getSuperclass();
         }
+
     }
 
     public synchronized List<T> getList() {

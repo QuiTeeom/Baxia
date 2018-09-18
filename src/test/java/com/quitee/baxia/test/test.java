@@ -35,5 +35,6 @@ public class test {
         System.out.println(student.getMyClass());
         System.out.println(myClass.getStudents());
         System.out.println( Baxia.get(Student.class,"EXS","black","hair"));
+
     }
 }

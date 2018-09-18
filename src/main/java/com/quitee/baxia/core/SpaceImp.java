@@ -65,10 +65,9 @@ public class SpaceImp<T> implements Space<T>{
 
     }
 
-    public synchronized List<T> getList() {
-        return new ArrayList<>(ts);
-    }
+    private SpaceImp(){}
 
+    @Override
     public synchronized T get(Object values,String field,Object...parameters){
         ValueGetter valueGetter = getValueGetter(field);
         for(T t:ts){
@@ -84,7 +83,12 @@ public class SpaceImp<T> implements Space<T>{
         return null;
     }
 
+    @Override
+    public synchronized List<T> getList() {
+        return new ArrayList<>(ts);
+    }
 
+    @Override
     public synchronized List<T> getList(List<Object> values,String field,Object...parameters){
         ValueGetter valueGetter = getValueGetter(field);
         List<T> res = new ArrayList<>();
@@ -101,7 +105,20 @@ public class SpaceImp<T> implements Space<T>{
         return res;
     }
 
+    @Override
+    public Space copy() {
+        SpaceImp spaceImp = new SpaceImp();
+        spaceImp.tClass = this.tClass;
+        spaceImp.valueGetterMap = new HashMap(valueGetterMap);
+        return spaceImp;
+    }
 
+    @Override
+    public boolean contains(T t) {
+        return ts.contains(t);
+    }
+
+    @Override
     public synchronized List<T> getList(Object value,String field,Object... parameters) {
         ValueGetter valueGetter = getValueGetter(field);
         List<T> res = new ArrayList<>();
@@ -118,23 +135,16 @@ public class SpaceImp<T> implements Space<T>{
         return res;
     }
 
-
+    @Override
     public synchronized void add(T t) {
         if (!ts.contains(t)) {
             ts.add(t);
         }
     }
 
+    @Override
     public synchronized void remove(T t) {
         ts.remove(t);
-    }
-
-    private synchronized ValueGetter getValueGetter(String field){
-        ValueGetter valueGetter = valueGetterMap.get(field);
-        if(valueGetter!=null)
-            return valueGetter;
-        else
-            throw new NoSuchField(tClass,field);
     }
 
     private boolean equals(Object a,Object b){
@@ -147,6 +157,18 @@ public class SpaceImp<T> implements Space<T>{
         return false;
     }
 
+    private synchronized ValueGetter getValueGetter(String field){
+        ValueGetter valueGetter = valueGetterMap.get(field);
+        if(valueGetter!=null)
+            return valueGetter;
+        else
+            throw new NoSuchField(tClass,field);
+    }
+
+    /**
+     * 获取Value
+     * @param <T>
+     */
     private interface ValueGetter<T>{
         Object get(T t,Object...parameters) throws Exception;
     }

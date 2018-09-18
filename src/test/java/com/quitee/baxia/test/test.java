@@ -1,6 +1,7 @@
 package com.quitee.baxia.test;
 
 import com.quitee.baxia.core.Baxia;
+import com.quitee.baxia.core.Transaction;
 
 public class test {
     public void a(){
@@ -36,5 +37,20 @@ public class test {
         System.out.println(myClass.getStudents());
         System.out.println( Baxia.get(Student.class,"EXS","black","hair"));
 
+
+        Student student3 = new Student();
+        student3.setName("q3");
+        student3.setAge(24);
+        student3.setGender("f");
+        student3.setExs("hair","yellow");
+        student3.setClassId(1);
+
+        Transaction transaction = Baxia.createTransaction();
+        transaction.add(student3);
+        transaction.remove(student2);
+        transaction.commit();
+        transaction.destroy();
+
+        System.out.println(myClass.getStudents());
     }
 }
